@@ -21,7 +21,7 @@ static size_t readImageByteChunk(char *data, size_t size, size_t nmemb, void *cl
     mem->image_data= ptr;
     memcpy(&(mem->image_data[mem->size]), data, total);
     // or
-    // memcpy(mem->response + mem->size, data, realsize);
+    // memcpy(mem->response + mem->size, data, total);
     mem->size += total;
 
     return total;
