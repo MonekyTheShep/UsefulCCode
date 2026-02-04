@@ -4,15 +4,15 @@
 #include <curl/curl.h>
 #include <cjson/cJSON.h>
 
-struct memory {
+typedef struct ImageBytes {
     unsigned char *image_data;
     size_t size;
-};
+} ImageBytes;
 
 static size_t readImageByteChunk(char *data, size_t size, size_t nmemb, void *clientp)
 {
     size_t total = nmemb * size;
-    struct memory *mem = (struct memory *)clientp;
+    ImageBytes *mem = (ImageBytes *)clientp;
 
     unsigned char *ptr = realloc(mem->image_data, mem->size + total);
     if(!ptr)
@@ -28,7 +28,7 @@ static size_t readImageByteChunk(char *data, size_t size, size_t nmemb, void *cl
 }
 
 
-void writeTofile(const char *filename, struct memory *chunk) {
+void writeTofile(const char *filename, const ImageBytes *chunk) {
     FILE *fp;
 
     size_t size = chunk->size;
@@ -45,7 +45,7 @@ void writeTofile(const char *filename, struct memory *chunk) {
 }
 
 int main(void) {
-    struct memory chunk = { 0 };
+    ImageBytes chunk = { 0 };
     CURLcode result;
     curl_global_init(CURL_GLOBAL_DEFAULT);
     CURL *curl = curl_easy_init();
