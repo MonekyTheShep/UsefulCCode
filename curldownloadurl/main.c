@@ -35,8 +35,6 @@ static size_t readImageByteChunk(unsigned char *data, size_t size, size_t nmemb,
 void writeTofile(const char *filename, const ImageBytes *chunk) {
     FILE *fp;
 
-    size_t size = chunk->size;
-
     fp = fopen(filename, "wb");
     if(fp == NULL)
     {
@@ -44,7 +42,7 @@ void writeTofile(const char *filename, const ImageBytes *chunk) {
         return;
     }
 
-    fwrite(chunk->image_data, size, 1, fp);
+    fwrite(chunk->image_data, sizeof(unsigned char), chunk->size, fp);
 
 }
 
@@ -83,6 +81,8 @@ int main(void) {
 
         writeTofile(filename, &chunk);
 
+
+        printf("%zu", chunk.size);
         /* remember to free the buffer */
         free(chunk.image_data);
         curl_global_cleanup();
