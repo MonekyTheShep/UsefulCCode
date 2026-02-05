@@ -4,16 +4,16 @@
 #include <curl/curl.h>
 #include <cjson/cJSON.h>
 
-typedef struct ImageBytes {
-    unsigned char *image_data;
-    size_t size;
-} ImageBytes;
-
 
 typedef struct ReadFileResult {
     unsigned char *file_data;
     long size;
 } ReadFileResult;
+
+typedef struct ImageBytes {
+    unsigned char *image_data;
+    size_t size;
+} ImageBytes;
 
 static size_t readImageByteChunk(unsigned char *data, size_t size, size_t nmemb, void *clientp)
 {
@@ -87,7 +87,7 @@ unsigned char *readFromFileChar(const char *filename) {
     }
 
 
-    // Read the integers from the file into the buffer
+    // Read the chars from the file into the buffer
     fread(buffer, sizeof(unsigned char),size, file);
     fclose(file);
     buffer[size] = '\0';
@@ -102,11 +102,9 @@ int main(void) {
     CURL *curl = curl_easy_init();
 
     if(curl) {
-        const char url[] = "https://e621.net/posts.json?limit=2";
-
         curl_easy_setopt(curl, CURLOPT_USERAGENT, "e621curl/1.0 (by Moneky on e621)");
 
-        curl_easy_setopt(curl, CURLOPT_URL, url);
+        curl_easy_setopt(curl, CURLOPT_URL, "https://static1.e621.net/data/sample/df/cb/dfcb38b6c0cf45d5ad543ce96c5d8bc5.jpg");
         /* send all data to this function  */
         curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, readImageByteChunk);
 
@@ -126,20 +124,10 @@ int main(void) {
         }
 
         // write to file
-        const char filename[] = "posts.json";
+        const char filename[] = "porn.png";
         writeToFile(filename, &chunk);
 
-
-
-        // read and write back to file
-        unsigned char *fileData = readFromFileChar(filename);
-
-        size_t length = strlen((const char *)fileData);
-
-        writeToFileChar(filename, fileData, (long) length);
-
         // Free the file data
-        free(fileData);
         free(chunk.image_data);
         curl_global_cleanup();
         return 0;
