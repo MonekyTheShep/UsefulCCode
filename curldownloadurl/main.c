@@ -66,31 +66,33 @@ void writeToFileChar(const char *filename, const unsigned char *chunk, const lon
 
 }
 
-ReadFileResult readFromFileChar(const char *filename) {
-    // Open the binary file for reading
+unsigned char *readFromFileChar(const char *filename) {
+    // Open the file for reading
     FILE *file = fopen(filename, "rb");
     if (file == NULL) {
         perror("Error opening file");
-        return (ReadFileResult){NULL, 0};
+        return NULL;
     }
 
     fseek(file, 0, SEEK_END); // seek to end of file
     long size = ftell(file); // get current file pointer
     rewind(file);
 
-    unsigned char *buffer = malloc(size * sizeof(unsigned char));
+    unsigned char *buffer = malloc(size * sizeof(unsigned char) + 1);
 
     if (buffer == NULL) {
         fprintf(stderr, "Error allocating memory for buffer");
         fclose(file);
-        return (ReadFileResult){NULL, 0};
+        return NULL;
     }
 
 
     // Read the integers from the file into the buffer
     fread(buffer, sizeof(unsigned char),size, file);
     fclose(file);
-    return (ReadFileResult){buffer, size};
+    buffer[size] = '\0';
+
+    return buffer;
 }
 
 int main(void) {
@@ -123,19 +125,21 @@ int main(void) {
             curl_easy_cleanup(curl);
         }
 
-
+        // write to file
         const char filename[] = "posts.json";
-
         writeToFile(filename, &chunk);
 
-        ReadFileResult resultFile = readFromFileChar(filename);
 
-        writeToFileChar(filename, resultFile.file_data, resultFile.size);
 
-        // Close the file
-        free(resultFile.file_data);
+        // read and write back to file
+        unsigned char *fileData = readFromFileChar(filename);
 
-        /* remember to free the buffer */
+        size_t length = strlen((const char *)fileData);
+
+        writeToFileChar(filename, fileData, (long) length);
+
+        // Free the file data
+        free(fileData);
         free(chunk.image_data);
         curl_global_cleanup();
         return 0;
