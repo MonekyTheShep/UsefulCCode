@@ -9,12 +9,14 @@ typedef struct ImageBytes {
     size_t size;
 } ImageBytes;
 
-static size_t readImageByteChunk(char *data, size_t size, size_t nmemb, void *clientp)
+static size_t readImageByteChunk(unsigned char *data, size_t size, size_t nmemb, void *clientp)
 {
     size_t total = nmemb * size;
     ImageBytes *mem = (ImageBytes *)clientp;
 
     unsigned char *ptr = realloc(mem->image_data, mem->size + total);
+    // null terminate for strings
+    //unsigned char *ptr = realloc(mem->image_data, mem->size + total + 1);
     if(!ptr)
         return 0;  /* out of memory */
 
@@ -24,6 +26,8 @@ static size_t readImageByteChunk(char *data, size_t size, size_t nmemb, void *cl
     // memcpy(mem->image_data + mem->size, data, total);
     mem->size += total;
 
+    // Null terminate at start of next chunk
+    // mem->image_data[mem->size] = 0;
     return total;
 }
 
@@ -51,9 +55,11 @@ int main(void) {
     CURL *curl = curl_easy_init();
 
     if(curl) {
+        const char url[] = "https://static1.e621.net/data/sample/df/cb/dfcb38b6c0cf45d5ad543ce96c5d8bc5.jpg";
+
         curl_easy_setopt(curl, CURLOPT_USERAGENT, "e621curl/1.0 (by Moneky on e621)");
 
-        curl_easy_setopt(curl, CURLOPT_URL, "https://static1.e621.net/data/sample/df/cb/dfcb38b6c0cf45d5ad543ce96c5d8bc5.jpg");
+        curl_easy_setopt(curl, CURLOPT_URL, url);
         /* send all data to this function  */
         curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, readImageByteChunk);
 
