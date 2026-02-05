@@ -9,6 +9,12 @@ typedef struct ImageBytes {
     size_t size;
 } ImageBytes;
 
+
+typedef struct ReadFileResult {
+    unsigned char *file_data;
+    long size;
+} ReadFileResult;
+
 static size_t readImageByteChunk(unsigned char *data, size_t size, size_t nmemb, void *clientp)
 {
     size_t total = nmemb * size;
@@ -32,7 +38,7 @@ static size_t readImageByteChunk(unsigned char *data, size_t size, size_t nmemb,
 }
 
 
-void writeTofile(const char *filename, const ImageBytes *chunk) {
+void writeToFile(const char *filename, const ImageBytes *chunk) {
     FILE *fp;
 
     fp = fopen(filename, "wb");
@@ -46,6 +52,47 @@ void writeTofile(const char *filename, const ImageBytes *chunk) {
 
 }
 
+void writeToFileChar(const char *filename, const unsigned char *chunk, const long size) {
+    FILE *fp;
+
+    fp = fopen(filename, "wb");
+    if(fp == NULL)
+    {
+        fprintf(stderr,"Error writing to %s\n",filename);
+        return;
+    }
+
+    fwrite(chunk, sizeof(unsigned char), size, fp);
+
+}
+
+ReadFileResult readFromFileChar(const char *filename) {
+    // Open the binary file for reading
+    FILE *file = fopen(filename, "rb");
+    if (file == NULL) {
+        perror("Error opening file");
+        return (ReadFileResult){NULL, 0};
+    }
+
+    fseek(file, 0, SEEK_END); // seek to end of file
+    long size = ftell(file); // get current file pointer
+    rewind(file);
+
+    unsigned char *buffer = malloc(size * sizeof(unsigned char));
+
+    if (buffer == NULL) {
+        fprintf(stderr, "Error allocating memory for buffer");
+        fclose(file);
+        return (ReadFileResult){NULL, 0};
+    }
+
+
+    // Read the integers from the file into the buffer
+    fread(buffer, sizeof(unsigned char),size, file);
+    fclose(file);
+    return (ReadFileResult){buffer, size};
+}
+
 int main(void) {
     ImageBytes chunk = { 0 };
     CURLcode result;
@@ -53,7 +100,7 @@ int main(void) {
     CURL *curl = curl_easy_init();
 
     if(curl) {
-        const char url[] = "https://static1.e621.net/data/sample/df/cb/dfcb38b6c0cf45d5ad543ce96c5d8bc5.jpg";
+        const char url[] = "https://e621.net/posts.json?limit=2";
 
         curl_easy_setopt(curl, CURLOPT_USERAGENT, "e621curl/1.0 (by Moneky on e621)");
 
@@ -77,15 +124,21 @@ int main(void) {
         }
 
 
-        const char filename[] = "porn.png";
+        const char filename[] = "posts.json";
 
-        writeTofile(filename, &chunk);
+        writeToFile(filename, &chunk);
 
+        ReadFileResult resultFile = readFromFileChar(filename);
 
-        printf("%zu", chunk.size);
+        writeToFileChar(filename, resultFile.file_data, resultFile.size);
+
+        // Close the file
+        free(resultFile.file_data);
+
         /* remember to free the buffer */
         free(chunk.image_data);
         curl_global_cleanup();
         return 0;
     }
+
 }
