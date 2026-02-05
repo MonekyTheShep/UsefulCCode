@@ -8,7 +8,6 @@ find_package(CURL REQUIRED)
 find_package(cjson REQUIRED)
 
 add_executable(curldownloadurl main.c)
-target_link_libraries(${PROJECT_NAME} PRIVATE cjson)
 
 
 target_compile_options(${PROJECT_NAME} PRIVATE
